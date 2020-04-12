@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  calibre-web:
+    image: trasba/calibre-web-rpi:edge
+    build: .
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - "8089:8083"
+    volumes:
+      - ${volbooks}:/books
+      - ${volconfig}:/config
+    restart: unless-stopped

@@ -1,0 +1,19 @@
+[Unit]
+Description=docker.docker-calibre-web daemon
+After=network.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=~~WORK-DIR~~
+ExecStart=~~DOCKER-COMPOSE-BIN~~/docker-compose -f ~~DOCKER-COMPOSE~~ up
+ExecStop=~~DOCKER-COMPOSE-BIN~~/docker-compose -f ~~DOCKER-COMPOSE~~ down
+Restart=always
+User=~~USER~~
+# Note RHEL/Fedora uses 'nobody', Debian/Ubuntu uses 'nogroup'
+Group=~~USER~~
+#paths also for other applications used by the libs, e.g awk & grep
+#Environment=PATH=/bin:/usr/bin:/home/pi/.nvm/versions/node/v8.10.0/bin
+
+[Install]
+WantedBy=multi-user.target
+
