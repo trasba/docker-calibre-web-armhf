@@ -1,4 +1,5 @@
-FROM trasba/docker-baseimage-ubuntu-armhf
+FROM lsiobase/ubuntu:bionic
+#focal was not working unresolvable dependency issues 2020-04-13
 
 # set version label
 ARG BUILD_DATE
@@ -7,74 +8,45 @@ LABEL build_version="version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="trasba"
 
 RUN \
- echo "**** install runtime packages & dev packages ****" && \
- apt-get update && apt-get install -y \
-        python \
-        python-pip \
-        python-setuptools \
-        curl \
-        file \
-        libfontconfig1-dev \
-        libfreetype6-dev \
-        g++ \
-        gcc \
-        libgs-dev \
-        liblcms2-dev \
-        libturbojpeg0-dev \
-        libpng-dev \
-        libtool \
-        libwebp-dev \
-        libxml2-dev \
-        libxslt1-dev \
-        make \
-        libperl-dev \
-        python-dev \
-        libtiff5-dev \
-        zlib1g-dev && \
- echo "**** install calibre ****" && \
- apt-get install calibre --no-install-recommends -y && \
- echo "**** install calibre-web ****" && \
- mkdir -p /app/calibre-web && \
- curl -L https://github.com/trasba/calibre-web/archive/master.tar.gz \
-        | tar xzv --strip-components=1 -C /app/calibre-web && \
- cd /app/calibre-web && \
- pip install --no-cache-dir -U -r requirements.txt && \
- sed -i 's/lxml==3.7.2/lxml>=3.8.0/g' optional-requirements.txt && \
- pip install --no-cache-dir -U -r optional-requirements.txt && \
- echo "**** cleanup ****" && \
- apt-get purge -y \
-        file libfontconfig1-dev libfreetype6-dev g++ gcc libgs-dev \
-        liblcms2-dev libturbojpeg0-dev libpng-dev libtool libwebp-dev \
-        libxml2-dev libxslt1-dev make libperl-dev python-dev libtiff5-dev \
-        zlib1g-dev python-dev autotools-dev binutils binutils-arm-linux-gnueabihf \
-        binutils-common cpp cpp-7 dirmngr fakeroot fonts-droid-fallback \
-        fonts-noto-mono g++-7 gcc-7 gcc-7-base gir1.2-harfbuzz-0.0 \
-        gnupg gnupg-l10n gnupg-utils gpg gpg-agent gpg-wks-client \
-        gpg-wks-server gpgconf gpgsm icu-devtools libalgorithm-diff-perl \
-        libalgorithm-diff-xs-perl libalgorithm-merge-perl libasan4 \
-        libassuan0 libatomic1 libbinutils libc-dev-bin libc6-dev libcc1-0 \
-        libcilkrts5 libcupsfilters-dev libcupsfilters1 libcupsimage2 \
-        libdpkg-perl libelf1 libexpat1-dev libfakeroot \
-        libfile-fcntllock-perl libgcc-7-dev libgdbm-compat4 libgdbm5 \
-        libglib2.0-bin libglib2.0-dev-bin libgraphite2-dev libgs9 \
-        libgs9-common libharfbuzz-gobject0 libharfbuzz-icu0 libicu-le-hb0 \
-        libiculx60 libijs-0.35 libijs-dev libijs-doc libisl19 libjbig-dev \
-        libjbig2dec0 libjbig2dec0-dev libjpeg-dev libjpeg-turbo8-dev \
-	libjpeg8-dev libksba8 liblocale-gettext-perl libltdl-dev \
-        liblzma-dev libmagic-mgc libmagic1 libmpc3 libmpdec2 libmpfr6 \
-        libnpth0 libpaper-dev libpaper-utils libpaper1 libpcre16-3 \
-        libpcre3-dev libpcre32-3 libpcrecpp0v5 libperl5.26 libpng-tools \
-        libpython-all-dev libpython-dev libpython2.7-dev libpython3-stdlib \
-        libpython3.6-minimal libpython3.6-stdlib libstdc++-7-dev libtiffxx5 \
-        libturbojpeg libubsan0 linux-libc-dev manpages manpages-dev netbase \
-        patch perl perl-modules-5.26 pinentry-curses python-all \
-        python2.7-dev python3 python3-distutils python3-lib2to3 \
-        python3-minimal python3.6 && \
- apt-get clean && \
- rm -rf \
-        /tmp/* \
-        /var/lib/apt/lists/* \
-        /var/tmp/*
+echo "**** install dev packages ****" && \
+       apt-get update && apt-get upgrade -y && apt-get install -y \
+              #for gevent, greenlet, python-Levenshtein, python-ldap, flask-simpleldap
+              gcc python-dev \
+              #for python-ldap, flask-simpleldap
+              libldap2-dev libsasl2-dev && \
+#
+echo "**** install calibre ****" && \
+       apt-get install calibre --no-install-recommends -y && \
+#
+echo "**** install pip ****" && \
+       curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+       python get-pip.py && \
+       rm get-pip.py && \
+#
+echo "**** install calibre-web ****" && \
+       mkdir -p /app/calibre-web && \
+              curl -L https://github.com/janeczku/calibre-web/archive/0.6.6.tar.gz \
+              | tar xzv --strip-components=1 -C /app/calibre-web && \
+       cd /app/calibre-web && \
+       pip install --no-cache-dir -U -r requirements.txt && \
+       #for comicapi at least git necessary maybe check back later -> exclude for now
+       sed -i 's/.*comicapi/#&/' optional-requirements.txt && \
+       #not using -U as lxml, pillow builds fail -> falling back to already installed version currently lxml(4.2.1) Pillow(5.1.0)
+       pip install --no-cache-dir -r optional-requirements.txt && \
+#
+echo "**** cleanup ****" && \
+apt-get purge -y \
+       binutils binutils-arm-linux-gnueabihf binutils-common cpp cpp-7 gcc gcc-7 gcc-7-base libasan4 libatomic1 libbinutils libc-dev-bin libc6-dev libcc1-0 libcilkrts5 libgcc-7-dev libgomp1 libisl19 libldap2-dev libmpc3 libmpfr6 libsasl2-dev libubsan0 linux-libc-dev manpages manpages-dev libexpat1-dev libpython-dev libpython2.7-dev python-dev python2.7-dev && \
+#
+#need to reinstall calibre somehow it gets uninstalled -> fix this later
+echo "**** reinstall calibre ****" && \
+       apt-get install calibre --no-install-recommends -y && \
+echo "**** continue cleanup ****" && \
+apt-get clean && \
+rm -rf \
+       /tmp/* \
+       /var/lib/apt/lists/* \
+       /var/tmp/*
 
 # add local files
 COPY root/ /

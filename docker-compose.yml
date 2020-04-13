@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   calibre-web:
-    image: trasba/calibre-web-rpi:edge
+    image: trasba/calibre-web-rpi:2.0
     build: .
     environment:
       - TZ=${TZ}
